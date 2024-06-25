@@ -1,0 +1,15 @@
+spring:
+  datasource:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/rest_with_spring
+      username: root
+      password: 2001
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      show-sql: true
+  application:
+    name: RestApi
+

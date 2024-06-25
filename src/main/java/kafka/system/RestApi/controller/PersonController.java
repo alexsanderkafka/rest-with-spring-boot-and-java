@@ -1,8 +1,10 @@
 package kafka.system.RestApi.controller;
 
-import kafka.system.RestApi.model.Person;
+import kafka.system.RestApi.data.vo.v1.PersonVO;
+import kafka.system.RestApi.data.vo.v2.PersonVOV2;
 import kafka.system.RestApi.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,30 +17,36 @@ public class PersonController {
     private PersonService personService;
 
     @GetMapping(value = "/{id}")
-    public Person findById(@PathVariable(value = "id") String id) throws Exception {
+    public PersonVO findById(@PathVariable(value = "id") Long id) throws Exception {
 
         return personService.findById(id);
     }
 
-    @GetMapping()
-    public List<Person> findAll() throws Exception {
+    @GetMapping
+    public List<PersonVO> findAll() throws Exception {
 
         return personService.findAll();
     }
 
-    @PostMapping()
-    public Person create(@RequestBody Person person) throws Exception {
+    @PostMapping
+    public PersonVO create(@RequestBody PersonVO person) throws Exception {
         return personService.create(person);
     }
 
+    @PostMapping("/v2")
+    public PersonVOV2 createV2(@RequestBody PersonVOV2 person) throws Exception {
+        return personService.createV2(person);
+    }
+
     @PutMapping
-    public Person update(@RequestBody Person person) throws Exception {
+    public PersonVO update(@RequestBody PersonVO person) throws Exception {
         return personService.update(person);
     }
 
     @DeleteMapping(value = "/{id}")
-    public void delete(@PathVariable(value = "id") String id) throws Exception {
+    public ResponseEntity<?> delete(@PathVariable(value = "id") Long id) throws Exception {
         personService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 
