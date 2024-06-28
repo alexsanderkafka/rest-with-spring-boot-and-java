@@ -4,6 +4,7 @@ import kafka.system.RestApi.data.vo.v1.PersonVO;
 import kafka.system.RestApi.data.vo.v2.PersonVOV2;
 import kafka.system.RestApi.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,24 +17,24 @@ public class PersonController {
     @Autowired
     private PersonService personService;
 
-    @GetMapping(value = "/{id}")
+    @GetMapping(value = "/{id}") //, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, "application/x-yaml"})
     public PersonVO findById(@PathVariable(value = "id") Long id) throws Exception {
 
         return personService.findById(id);
     }
 
-    @GetMapping
+    @GetMapping//(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public List<PersonVO> findAll() throws Exception {
 
         return personService.findAll();
     }
 
-    @PostMapping
+    @PostMapping//(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public PersonVO create(@RequestBody PersonVO person) throws Exception {
         return personService.create(person);
     }
 
-    @PutMapping
+    @PutMapping//(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public PersonVO update(@RequestBody PersonVO person) throws Exception {
         return personService.update(person);
     }
