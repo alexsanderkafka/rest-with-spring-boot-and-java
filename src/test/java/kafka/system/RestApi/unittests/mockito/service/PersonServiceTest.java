@@ -3,7 +3,7 @@ package kafka.system.RestApi.unittests.mockito.service;
 import kafka.system.RestApi.data.vo.v1.PersonVO;
 import kafka.system.RestApi.exceptions.RequiredObjectIsNullException;
 import kafka.system.RestApi.model.Person;
-import kafka.system.RestApi.repositories.PersonRepostiroty;
+import kafka.system.RestApi.repositories.PersonRepository;
 import kafka.system.RestApi.service.PersonService;
 import kafka.system.RestApi.unittests.mapper.mocks.MockPerson;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +31,7 @@ public class PersonServiceTest {
     private PersonService service;
 
     @Mock
-    private PersonRepostiroty personRepostiroty;
+    private PersonRepository personRepostiroty;
 
     @BeforeEach
     void setUpMocks() throws Exception{
