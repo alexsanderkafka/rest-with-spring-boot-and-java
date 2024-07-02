@@ -7,10 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kafka.system.RestApi.data.vo.v1.PersonVO;
-import kafka.system.RestApi.data.vo.v2.PersonVOV2;
 import kafka.system.RestApi.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +43,7 @@ public class PersonController {
         return personService.findAll();
     }
 
+    @CrossOrigin(origins = "http://localhost:8080")
     @GetMapping(value = "/{id}") //, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, "application/x-yaml"})
     @Operation(summary = "Finds a person",
             description = "Finds a person",
@@ -64,6 +63,7 @@ public class PersonController {
         return personService.findById(id);
     }
 
+    @CrossOrigin(origins = {"http://localhost:8080", "https://alex.com.br"})
     @PostMapping//(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     @Operation(summary = "Adds new Person",
             description = "Adds new Person",
