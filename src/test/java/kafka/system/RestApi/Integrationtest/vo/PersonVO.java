@@ -1,13 +1,13 @@
 package kafka.system.RestApi.Integrationtest.vo;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.springframework.hateoas.RepresentationModel;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class PersonVOTest implements Serializable {
+@XmlRootElement(name = "PersonVO")
+public class PersonVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -18,7 +18,7 @@ public class PersonVOTest implements Serializable {
     private String address;
     private String gender;
 
-    public PersonVOTest() {
+    public PersonVO() {
     }
 
     public void setId(Long id) {
@@ -65,7 +65,7 @@ public class PersonVOTest implements Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PersonVOTest that = (PersonVOTest) o;
+        PersonVO that = (PersonVO) o;
         return Objects.equals(id, that.id) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(address, that.address) && Objects.equals(gender, that.gender);
     }
 
@@ -73,4 +73,5 @@ public class PersonVOTest implements Serializable {
     public int hashCode() {
         return Objects.hash(id, firstName, lastName, address, gender);
     }
+
 }

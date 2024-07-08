@@ -1,5 +1,10 @@
 cors:
   originsPatterns: http://localhost:8080,http://localhost:3000,https://alex.com.br
+security:
+  jwt:
+    token:
+      secret-key: 53cr37
+      expire-length: 3600000
 spring:
   datasource:
       driver-class-name: com.mysql.cj.jdbc.Driver
@@ -15,6 +20,8 @@ spring:
   application:
     name: RestApi
 spring-doc:
-  pathToMatch: /api/**/v1/**
+  pathToMatch:
+    - /auth/**
+    - /api/**/v1/**
   swagger-ui:
     use-root-path: true

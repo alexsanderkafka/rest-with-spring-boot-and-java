@@ -1,8 +1,8 @@
-package kafka.system.RestApi.Integrationtest.controller.withjson;
+package kafka.system.RestApi.Integrationtest.controller.withxml;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
 import io.restassured.filter.log.RequestLoggingFilter;
@@ -11,6 +11,7 @@ import io.restassured.specification.RequestSpecification;
 import kafka.system.RestApi.Integrationtest.testcontainer.AbstractIntegrationTest;
 import kafka.system.RestApi.Integrationtest.vo.AccountCredentialsVO;
 import kafka.system.RestApi.Integrationtest.vo.PersonVO;
+import kafka.system.RestApi.Integrationtest.vo.TokenVO;
 import kafka.system.RestApi.configs.TestConfigs;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,20 +21,19 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PersonControllerJsonTest extends AbstractIntegrationTest {
+public class PersonControllerXmlTest extends AbstractIntegrationTest {
 
     private static RequestSpecification specification;
-    private static ObjectMapper objectMapper;
+    private static XmlMapper objectMapper;
 
     private static PersonVO person;
 
     @BeforeAll
     public static void setup(){
-        objectMapper = new ObjectMapper();
+        objectMapper = new XmlMapper();
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
         person = new PersonVO();
@@ -44,19 +44,21 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     public void authorization() {
         AccountCredentialsVO user = new AccountCredentialsVO("leandro", "admin123");
 
-        var accessToken =
+        TokenVO tokenVO =
                 given()
                         .basePath("/auth/signin")
                         .port(TestConfigs.SERVER_PORT)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .body(user)
                         .when()
                         .post()
                         .then()
-                        .statusCode(200).extract().body().jsonPath().getString("accessToken");
+                        .statusCode(200).extract().as(TokenVO.class);
+
 
         specification = new RequestSpecBuilder()
-                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + accessToken)
+                .addHeader(TestConfigs.HEADER_PARAM_AUTHORIZATION, "Bearer " + tokenVO.getAccessToken())
                 .setBasePath("/api/person/v1")
                 .setPort(TestConfigs.SERVER_PORT)
                 .addFilter(new RequestLoggingFilter(LogDetail.ALL))
@@ -72,7 +74,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
         var content =
                 given().spec(specification)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .body(person)
                         .when()
                         .post()
@@ -106,7 +109,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 
         var content =
                 given().spec(specification)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .body(person)
                         .when()
                         .put()
@@ -139,7 +143,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     public void testFindById() throws IOException {
         var content =
                 given().spec(specification)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .pathParams("id", person.getId())
                         .when()
                         .get("{id}")
@@ -169,7 +174,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     @Order(4)
     public void testDelete() throws IOException {
         given().spec(specification)
-                .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                .contentType(TestConfigs.CONTENT_TYPE_XML)
+                .accept(TestConfigs.CONTENT_TYPE_XML)
                 .pathParams("id", person.getId())
                 .when()
                 .delete("{id}")
@@ -182,7 +188,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
     public void testFindAll() throws IOException {
         var content =
                 given().spec(specification)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .when()
                         .get()
                         .then()
@@ -215,7 +222,8 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                 .build();
 
                 given().spec(specificationWithoutToken)
-                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
                         .when()
                         .get()
                         .then()
