@@ -114,4 +114,24 @@ public class PersonController {
         personService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping(value = "/{id}") //, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, "application/x-yaml"})
+    @Operation(summary = "Disable a person",
+            description = "Disable a person",
+            tags = {"People"},
+            responses = {
+                    @ApiResponse(description = "Success", responseCode = "200", content =
+                    @Content(schema = @Schema(implementation = PersonVO.class))
+                    ),
+                    @ApiResponse(description = "No Content", responseCode = "204", content = @Content),
+                    @ApiResponse(description = "Bad Request", responseCode = "400", content = @Content),
+                    @ApiResponse(description = "Unauthorized", responseCode = "401", content = @Content),
+                    @ApiResponse(description = "Not Found", responseCode = "404", content = @Content),
+                    @ApiResponse(description = "internal Error", responseCode = "500", content = @Content)
+            })
+    public PersonVO disablePerson(@PathVariable(value = "id") Long id) throws Exception {
+
+        return personService.disablePerson(id);
+    }
+
 }

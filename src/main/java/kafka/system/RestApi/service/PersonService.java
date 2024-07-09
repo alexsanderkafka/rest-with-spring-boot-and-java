@@ -1,5 +1,6 @@
 package kafka.system.RestApi.service;
 
+import jakarta.transaction.Transactional;
 import kafka.system.RestApi.controller.PersonController;
 import kafka.system.RestApi.data.vo.v1.PersonVO;
 import kafka.system.RestApi.exceptions.RequiredObjectIsNullException;
@@ -84,6 +85,20 @@ public class PersonService {
 
         var personVO = DozerMapper.parseObject(repository.save(entity), PersonVO.class);
         personVO.add(linkTo(methodOn(PersonController.class).findById(person.getKey())).withSelfRel());
+        return personVO;
+    }
+
+    @Transactional
+    public PersonVO disablePerson(Long id) throws Exception {
+        logger.info("Disabling one person!");
+
+        repository.disablePerson(id);
+
+        var entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("No records found for this id"));
+
+        var personVO = DozerMapper.parseObject(entity, PersonVO.class);
+        personVO.add(linkTo(methodOn(PersonController.class).findById(id)).withSelfRel());
+
         return personVO;
     }
 
