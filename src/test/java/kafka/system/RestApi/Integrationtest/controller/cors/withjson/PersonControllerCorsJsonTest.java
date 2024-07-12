@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class PersonControllerJsonTest extends AbstractIntegrationTest {
+public class PersonControllerCorsJsonTest extends AbstractIntegrationTest {
 
 	private static RequestSpecification specification;
 	private static ObjectMapper objectMapper;
@@ -177,8 +177,21 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
 		assertEquals("Invalid CORS request", content);
 	}
 
+	@Test
+	@Order(5)
+	public void testDelete() throws IOException {
 
-
+		given().spec(specification)
+				.contentType(TestConfigs.CONTENT_TYPE_JSON)
+				.header(TestConfigs.HEADER_PARAM_ORIGIN, TestConfigs.ORIGIN_ALEX)
+				.pathParams("id", person.getId())
+				.when()
+				.delete("{id}")
+				.then()
+				.statusCode(204)
+				.extract()
+				.body().asString();
+	}
 
 	private void mockPerson() {
 		person.setFirstName("Richard");

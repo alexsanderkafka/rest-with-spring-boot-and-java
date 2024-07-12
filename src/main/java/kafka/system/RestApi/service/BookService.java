@@ -14,6 +14,11 @@ import kafka.system.RestApi.repositories.BookRepository;
 import kafka.system.RestApi.repositories.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +35,9 @@ public class BookService {
     @Autowired
     private BookRepository repository;
 
+    @Autowired
+    PagedResourcesAssembler<BookVO> assembler;
+
 
     public BookVO findById(Long id) throws Exception {
         logger.info("Finding one book!");
@@ -42,22 +50,24 @@ public class BookService {
         return bookVO;
     }
 
-    public List<BookVO> findAll(){
+    public PagedModel<EntityModel<BookVO>> findAll(Pageable pageable) throws Exception {
 
-        logger.info("Finding all people!");
+        logger.info("Finding all books!");
 
-        var bookVO = DozerMapper.parseListObjects(repository.findAll(), BookVO.class);
+        var bookPage = repository.findAll(pageable);
 
-        bookVO
-                .forEach(p -> {
-                    try {
-                        p.add(linkTo(methodOn(BookController.class).findById(p.getKey())).withSelfRel());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+        var bookVoPage = bookPage.map(p -> DozerMapper.parseObject(p, BookVO.class));
 
-        return bookVO;
+        bookVoPage.map(b -> {
+            try {
+                return b.add(linkTo(methodOn(BookController.class).findById(b.getKey())).withSelfRel());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        Link link = linkTo(methodOn(BookController.class).findAll(pageable.getPageNumber(), pageable.getPageSize(), "asc")).withSelfRel();
+        return assembler.toModel(bookVoPage);
     }
 
     public BookVO create(BookVO book) throws Exception {

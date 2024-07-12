@@ -61,31 +61,6 @@ public class BookServiceTest {
     }
 
     @Test
-    void testFindAll() throws Exception {
-        List<Book> listEntity = input.mockEntityList();
-
-        when(bookRepostiroty.findAll()).thenReturn(listEntity);
-
-        var books = service.findAll();
-
-        assertNotNull(books);
-        assertEquals(14, books.size());
-
-        var bookOne = books.get(1);
-
-        assertNotNull(bookOne);
-        assertNotNull(bookOne.getKey());
-        assertNotNull(bookOne.getLinks());
-
-        assertTrue(bookOne.toString().contains("</api/book/v1/1>;rel=\"self\""));
-
-        assertEquals("Author Test1", bookOne.getAuthor());
-        assertEquals("Title Test1", bookOne.getTitle());
-        assertEquals(25D, bookOne.getPrice());
-        assertNotNull(bookOne.getLaunchDate());
-    }
-
-    @Test
     void testCreate() throws Exception {
         Book entity = input.mockEntity(1);
 

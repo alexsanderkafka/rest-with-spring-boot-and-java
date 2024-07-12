@@ -13,6 +13,8 @@ import kafka.system.RestApi.Integrationtest.testcontainer.AbstractIntegrationTes
 import kafka.system.RestApi.Integrationtest.vo.AccountCredentialsVO;
 import kafka.system.RestApi.Integrationtest.vo.BookVO;
 import kafka.system.RestApi.Integrationtest.vo.TokenVO;
+import kafka.system.RestApi.Integrationtest.vo.pagedmodels.PagedModelBook;
+import kafka.system.RestApi.Integrationtest.vo.wrappers.WrapperBookVO;
 import kafka.system.RestApi.configs.TestConfigs;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -186,6 +188,9 @@ public class BookControllerXmlTest extends AbstractIntegrationTest {
         var content =
                 given().spec(specification)
                         .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
                         .accept(TestConfigs.CONTENT_TYPE_XML)
                         .when()
                         .get()
@@ -194,8 +199,8 @@ public class BookControllerXmlTest extends AbstractIntegrationTest {
                         .extract()
                         .body().asString();
 
-        TypeReference<List<BookVO>> tRef = new TypeReference<List<BookVO>>() {};
-        List<BookVO> book = objectMapper.readValue(content, tRef);
+        PagedModelBook wrapper = objectMapper.readValue(content, PagedModelBook.class);
+        var book = wrapper.getContent();
 
         BookVO findBook = book.getFirst();
 
@@ -205,7 +210,7 @@ public class BookControllerXmlTest extends AbstractIntegrationTest {
         assertNotNull(findBook.getTitle());
         assertNotNull(findBook.getPrice());
 
-        assertEquals(1, findBook.getKey());
+        assertEquals(15, findBook.getKey());
     }
 
     @Test
@@ -226,6 +231,36 @@ public class BookControllerXmlTest extends AbstractIntegrationTest {
                         .then()
                         .statusCode(403);
     }
+
+    @Test
+    @Order(7)
+    public void testHATEOAS() throws IOException {
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_XML)
+                        .accept(TestConfigs.CONTENT_TYPE_XML)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
+                        .when()
+                        .get()
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .body().asString();
+
+        assertTrue(content.contains("<links><rel>self</rel><href>http://localhost:8888/api/book/v1/15</href></links>"));
+        assertTrue(content.contains("<links><rel>self</rel><href>http://localhost:8888/api/book/v1/7</href></links>"));
+        assertTrue(content.contains("<links><rel>self</rel><href>http://localhost:8888/api/book/v1/2</href></links>"));
+
+        assertTrue(content.contains("<page><size>10</size><totalElements>16</totalElements><totalPages>2</totalPages><number>0</number></page>"));
+
+        assertTrue(content.contains("<links><rel>last</rel><href>http://localhost:8888/api/book/v1?direction=asc&amp;page=1&amp;size=10&amp;sort=author,asc</href></links>"));
+        assertTrue(content.contains("<links><rel>next</rel><href>http://localhost:8888/api/book/v1?direction=asc&amp;page=1&amp;size=10&amp;sort=author,asc</href></links>"));
+        assertTrue(content.contains("<links><rel>self</rel><href>http://localhost:8888/api/book/v1?direction=asc&amp;page=0&amp;size=10&amp;sort=author,asc</href></links>"));
+        assertTrue(content.contains("<links><rel>first</rel><href>http://localhost:8888/api/book/v1?direction=asc&amp;page=0&amp;size=10&amp;sort=author,asc</href></links>"));
+    }
+
 
     private void mockBook() throws ParseException {
         SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");

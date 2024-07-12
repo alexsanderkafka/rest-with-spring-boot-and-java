@@ -1,6 +1,7 @@
 package kafka.system.RestApi.model;
 
 import jakarta.persistence.*;
+import org.springframework.hateoas.Link;
 
 import java.io.Serial;
 import java.io.Serializable;

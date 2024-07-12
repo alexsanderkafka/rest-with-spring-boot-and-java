@@ -11,6 +11,7 @@ import io.restassured.specification.RequestSpecification;
 import kafka.system.RestApi.Integrationtest.testcontainer.AbstractIntegrationTest;
 import kafka.system.RestApi.Integrationtest.vo.AccountCredentialsVO;
 import kafka.system.RestApi.Integrationtest.vo.PersonVO;
+import kafka.system.RestApi.Integrationtest.vo.wrappers.WrapperPersonVO;
 import kafka.system.RestApi.configs.TestConfigs;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -218,6 +219,9 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         var content =
                 given().spec(specification)
                         .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
                         .when()
                         .get()
                         .then()
@@ -225,10 +229,10 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                         .extract()
                         .body().asString();
 
-        TypeReference<List<PersonVO>> tRef = new TypeReference<List<PersonVO>>() {};
-        List<PersonVO> people = objectMapper.readValue(content, tRef);
+        WrapperPersonVO wrapper = objectMapper.readValue(content, WrapperPersonVO.class);
+        var people = wrapper.getEmbedded().getPersons();
 
-        PersonVO findPersonOne = people.getFirst();
+        PersonVO findPersonOne = people.get(0);
 
         assertNotNull(findPersonOne.getId());
         assertNotNull(findPersonOne.getFirstName());
@@ -236,11 +240,45 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
         assertNotNull(findPersonOne.getAddress());
         assertNotNull(findPersonOne.getGender());
 
-        assertEquals(1, findPersonOne.getId());
+        assertEquals(704, findPersonOne.getId());
     }
 
     @Test
     @Order(7)
+    public void testFindByName() throws IOException {
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .queryParams(
+                                "page", 0, "size", 6, "direction", "asc"
+                        )
+                        .pathParam(
+                                "firstName", "ary"
+                        )
+                        .when()
+                        .get("findPersonByName/{firstName}")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .body().asString();
+
+        WrapperPersonVO wrapper = objectMapper.readValue(content, WrapperPersonVO.class);
+        var people = wrapper.getEmbedded().getPersons();
+
+        PersonVO findPersonOne = people.get(0);
+
+        assertNotNull(findPersonOne.getId());
+        assertNotNull(findPersonOne.getFirstName());
+        assertNotNull(findPersonOne.getLastName());
+        assertNotNull(findPersonOne.getAddress());
+        assertNotNull(findPersonOne.getGender());
+
+        assertEquals(533, findPersonOne.getId());
+    }
+
+
+    @Test
+    @Order(8)
     public void testFindAllWithoutToken() throws IOException {
         RequestSpecification specificationWithoutToken = new RequestSpecBuilder()
                 .setBasePath("/api/person/v1")
@@ -256,6 +294,35 @@ public class PersonControllerJsonTest extends AbstractIntegrationTest {
                         .then()
                         .statusCode(403);
     }
+
+    @Test
+    @Order(9)
+    public void testHATEOAS() throws IOException {
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
+                        .when()
+                        .get()
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .body().asString();
+
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/person/v1/704\"}}}"));
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/person/v1/733\"}}}"));
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/person/v1/163\"}}}"));
+
+        assertTrue(content.contains("\"page\":{\"size\":10,\"totalElements\":1009,\"totalPages\":101,\"number\":0}}"));
+
+        assertTrue(content.contains("\"last\":{\"href\":\"http://localhost:8888/api/person/v1?direction=asc&page=100&size=10&sort=firstName,asc\"}}"));
+        assertTrue(content.contains("\"next\":{\"href\":\"http://localhost:8888/api/person/v1?direction=asc&page=1&size=10&sort=firstName,asc\"}"));
+        assertTrue(content.contains("\"self\":{\"href\":\"http://localhost:8888/api/person/v1?page=0&size=10&direction=asc\"}"));
+        assertTrue(content.contains("\"first\":{\"href\":\"http://localhost:8888/api/person/v1?direction=asc&page=0&size=10&sort=firstName,asc\"}"));
+    }
+
 
     private void mockPerson() {
         person.setFirstName("Richard");

@@ -16,6 +16,7 @@ import kafka.system.RestApi.Integrationtest.testcontainer.AbstractIntegrationTes
 import kafka.system.RestApi.Integrationtest.vo.AccountCredentialsVO;
 import kafka.system.RestApi.Integrationtest.vo.BookVO;
 import kafka.system.RestApi.Integrationtest.vo.TokenVO;
+import kafka.system.RestApi.Integrationtest.vo.pagedmodels.PagedModelBook;
 import kafka.system.RestApi.configs.TestConfigs;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -232,9 +233,9 @@ public class BookControllerYamlTest extends AbstractIntegrationTest {
                         .then()
                         .statusCode(200)
                         .extract()
-                        .body().as(BookVO[].class, objectMapper);
+                        .body().as(PagedModelBook.class, objectMapper);
 
-        List<BookVO> book = Arrays.asList(content);
+        var book = content.getContent();
 
         BookVO findBook = book.getFirst();
 
@@ -244,7 +245,7 @@ public class BookControllerYamlTest extends AbstractIntegrationTest {
         assertNotNull(findBook.getTitle());
         assertNotNull(findBook.getPrice());
 
-        assertEquals(1, findBook.getKey());
+        assertEquals(15, findBook.getKey());
     }
 
     @Test
@@ -272,6 +273,53 @@ public class BookControllerYamlTest extends AbstractIntegrationTest {
                         .then()
                         .statusCode(403);
     }
+
+    @Test
+    @Order(7)
+    public void testHATEOAS() throws IOException {
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_YAML)
+                        .accept(TestConfigs.CONTENT_TYPE_YAML)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
+                        .when()
+                        .get()
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .body().asString();
+
+        assertTrue(content.contains("rel: \"self\"\n" +
+                "    href: \"http://localhost:8888/api/book/v1/15\""));
+
+        assertTrue(content.contains("rel: \"self\"\n" +
+                "    href: \"http://localhost:8888/api/book/v1/7\""));
+
+        assertTrue(content.contains("rel: \"self\"\n" +
+                "    href: \"http://localhost:8888/api/book/v1/7\""));
+
+        assertTrue(content.contains("""
+                page:
+                  size: 10
+                  totalElements: 16
+                  totalPages: 2
+                  number: 0"""));
+
+        assertTrue(content.contains("rel: \"last\"\n" +
+                "  href: \"http://localhost:8888/api/book/v1?direction=asc&page=1&size=10&sort=author,asc\""));
+
+        assertTrue(content.contains("rel: \"next\"\n" +
+                "  href: \"http://localhost:8888/api/book/v1?direction=asc&page=1&size=10&sort=author,asc\""));
+
+        assertTrue(content.contains("rel: \"self\"\n" +
+                "  href: \"http://localhost:8888/api/book/v1?direction=asc&page=0&size=10&sort=author,asc\""));
+
+        assertTrue(content.contains("rel: \"first\"\n" +
+                "  href: \"http://localhost:8888/api/book/v1?direction=asc&page=0&size=10&sort=author,asc\""));
+    }
+
 
     private void mockBook() throws ParseException {
         SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");

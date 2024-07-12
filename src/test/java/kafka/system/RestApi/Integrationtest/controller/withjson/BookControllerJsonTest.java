@@ -12,6 +12,7 @@ import kafka.system.RestApi.Integrationtest.testcontainer.AbstractIntegrationTes
 import kafka.system.RestApi.Integrationtest.vo.AccountCredentialsVO;
 import kafka.system.RestApi.Integrationtest.vo.BookVO;
 import kafka.system.RestApi.Integrationtest.vo.PersonVO;
+import kafka.system.RestApi.Integrationtest.vo.wrappers.WrapperBookVO;
 import kafka.system.RestApi.configs.TestConfigs;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -182,6 +183,9 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
         var content =
                 given().spec(specification)
                         .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
                         .when()
                         .get()
                         .then()
@@ -189,8 +193,8 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
                         .extract()
                         .body().asString();
 
-        TypeReference<List<BookVO>> tRef = new TypeReference<List<BookVO>>() {};
-        List<BookVO> book = objectMapper.readValue(content, tRef);
+        WrapperBookVO wrapper = objectMapper.readValue(content, WrapperBookVO.class);
+        var book = wrapper.getEmbedded().getBooks();
 
         BookVO findBook = book.getFirst();
 
@@ -200,7 +204,7 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
         assertNotNull(findBook.getTitle());
         assertNotNull(findBook.getPrice());
 
-        assertEquals(1, findBook.getKey());
+        assertEquals(15, findBook.getKey());
     }
 
     @Test
@@ -220,6 +224,35 @@ public class BookControllerJsonTest extends AbstractIntegrationTest {
                         .then()
                         .statusCode(403);
     }
+
+    @Test
+    @Order(7)
+    public void testHATEOAS() throws IOException {
+        var content =
+                given().spec(specification)
+                        .contentType(TestConfigs.CONTENT_TYPE_JSON)
+                        .queryParams(
+                                "page", 0, "size", 10, "direction", "asc"
+                        )
+                        .when()
+                        .get()
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .body().asString();
+
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/book/v1/15\"}}}"));
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/book/v1/2\"}}}"));
+        assertTrue(content.contains("\"_links\":{\"self\":{\"href\":\"http://localhost:8888/api/book/v1/7\"}}}"));
+
+        assertTrue(content.contains("\"page\":{\"size\":10,\"totalElements\":15,\"totalPages\":2,\"number\":0}}"));
+
+        assertTrue(content.contains("\"last\":{\"href\":\"http://localhost:8888/api/book/v1?direction=asc&page=1&size=10&sort=author,asc\"}}"));
+        assertTrue(content.contains("\"next\":{\"href\":\"http://localhost:8888/api/book/v1?direction=asc&page=1&size=10&sort=author,asc\"}"));
+        assertTrue(content.contains("\"self\":{\"href\":\"http://localhost:8888/api/book/v1?direction=asc&page=0&size=10&sort=author,asc\"}"));
+        assertTrue(content.contains("\"first\":{\"href\":\"http://localhost:8888/api/book/v1?direction=asc&page=0&size=10&sort=author,asc\"}"));
+    }
+
 
     private void mockBook() throws ParseException {
         SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSSSS");

@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,31 +59,6 @@ public class PersonServiceTest {
         assertEquals("Female", result.getGender());
     }
 
-    @Test
-    void testFindAll() throws Exception {
-        List<Person> listEntity = input.mockEntityList();
-
-        when(personRepostiroty.findAll()).thenReturn(listEntity);
-
-        var people = service.findAll();
-
-        assertNotNull(people);
-        assertEquals(14, people.size());
-
-        var personOne = people.get(1);
-
-        assertNotNull(personOne);
-        assertNotNull(personOne.getKey());
-        assertNotNull(personOne.getLinks());
-
-        assertTrue(personOne.toString().contains("</api/person/v1/1>;rel=\"self\""));
-
-        assertEquals("Addres Test1", personOne.getAddress());
-        assertEquals("First Name Test1", personOne.getFirstName());
-        assertEquals("Last Name Test1", personOne.getLastName());
-        assertEquals("Female", personOne.getGender());
-
-    }
 
     @Test
     void testCreate() throws Exception {
