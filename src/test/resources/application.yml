@@ -2,6 +2,8 @@ server:
   port: 8888
 cors:
   originsPatterns: http://localhost:8080,http://localhost:3000,https://alex.com.br
+file:
+  upload-dir: /Downloads/UploadDir
 security:
   jwt:
     token:
@@ -16,6 +18,12 @@ spring:
       ddl-auto: none
     properties:
       show-sql: true
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 2KB
+      max-file-size: 200MB
+      max-request-size: 215MB
   application:
     name: RestApi
 spring-doc:
